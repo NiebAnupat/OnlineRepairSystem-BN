@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cases {
+  case_id                    Int       @id @default(autoincrement())
+  user_id                    String?   @db.VarChar(50)
+  status_id                  Int?
+  tec_id                     String?   @db.VarChar(50)
+  name_case                  String    @db.VarChar(50)
+  detail_case                String    @db.Text
+  place_case                 String    @db.VarChar(50)
+  date_case                  DateTime  @db.Date
+  date_assign                DateTime  @db.Date
+  date_sent                  DateTime  @db.Date
+  date_close                 DateTime  @db.Date
+  users_cases_user_idTousers users?    @relation("cases_user_idTousers", fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_1")
+  statuses                   statuses? @relation(fields: [status_id], references: [status_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_2")
+  users_cases_tec_idTousers  users?    @relation("cases_tec_idTousers", fields: [tec_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_3")
+  images                     images[]
+
+  @@index([status_id], map: "status_id")
+  @@index([tec_id], map: "tec_id")
+  @@index([user_id], map: "user_id")
+}
+
+model images {
+  image_id Int    @id @default(autoincrement())
+  case_id  Int?
+  image    Bytes
+  cases    cases? @relation(fields: [case_id], references: [case_id], onDelete: Restrict, onUpdate: Restrict, map: "images_ibfk_1")
+
+  @@index([case_id], map: "case_id")
+}
+
+model statuses {
+  status_id   Int     @id
+  status_name String  @db.VarChar(50)
+  cases       cases[]
+}
+
+model users {
+  user_id                    String          @id @db.VarChar(50)
+  username                   String          @db.VarChar(50)
+  password                   String          @db.VarChar(50)
+  avatar                     Bytes
+  user_role                  users_user_role
+  changeAt                   DateTime        @default(now()) @db.Timestamp(0)
+  cases_cases_user_idTousers cases[]         @relation("cases_user_idTousers")
+  cases_cases_tec_idTousers  cases[]         @relation("cases_tec_idTousers")
+}
+
+enum users_user_role {
+  admin
+  employee
+  worker
+}
