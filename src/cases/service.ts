@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient, cases as CaseModel } from "@prisma/client";
 
-export default class UserService {
+export default class CaseService {
   private static prisma = new PrismaClient();
 
   static async findAll(): Promise<CaseModel[] | undefined> {

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import service from "./service";
-import User from "./UserModel";
+import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
+import service from "./service";
+import User from "./UserModel";
 
 const getAll = async (req: Request, res: Response) => {
   try {
@@ -34,24 +35,26 @@ const getOne = async (req: Request, res: Response) => {
 
 const create = async (req: Request, res: Response) => {
   try {
-    const newUse: User = req.body;
+    const newUser: User = req.body;
+
     let img: Buffer;
-    // const uploadPath = path.join(process.cwd(), "/assets/uploads/");
-    const uploadPath = path.join(__dirname, "/assets/uploads/");
+    const uploadPath = path.join(process.cwd(), "src/assets/uploads/");
     if (req.file !== undefined) {
       img = fs.readFileSync(uploadPath + req.file.filename);
-      newUse.avatar = img;
+      newUser.avatar = img;
       fs.unlinkSync(uploadPath + req.file.filename); // delete uploaded file
     } else {
       img = fs.readFileSync(
-        path.join(__dirname, "/assets/", "defaultAvatar.png")
+        path.join(process.cwd(), "/src/assets/", "defaultAvatar.png")
       );
-      newUse.avatar = img;
+      newUser.avatar = img;
     }
-    const user = await service.create(newUse);
-    res.status(201).json(user);
 
-     
+    const salt = await bcrypt.genSalt(10);
+    newUser.password = await bcrypt.hash(newUser.password, salt);
+
+    const user = await service.create(newUser);
+    res.status(201).json(user);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

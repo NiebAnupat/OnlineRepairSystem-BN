@@ -47,7 +47,7 @@ model statuses {
 model users {
   user_id                    String          @id @db.VarChar(50)
   username                   String          @db.VarChar(50)
-  password                   String          @db.VarChar(50)
+  password                   String          @db.VarChar(72)
   avatar                     Bytes
   user_role                  users_user_role
   changeAt                   DateTime        @default(now()) @db.Timestamp(0)

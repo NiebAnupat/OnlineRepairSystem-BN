@@ -16,6 +16,9 @@ app.get('/', (req: Request, res: Response) => {
 import usersRouter from './src/users/router';
 app.use('/users', usersRouter);
 
+import authRouter from './src/auth/router';
+app.use('/auth', authRouter);
+
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
