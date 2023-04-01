@@ -12,7 +12,7 @@ const login = async (req: Request, res: Response) => {
     const user = await service.findOne({ user_id });
 
     if (!user) {
-      return res.status(401).json({ error: "user not found" });
+      return res.status(404).json({ error: "user not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -22,7 +22,7 @@ const login = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign({ user_id: user.user_id }, secret_key, {
-      expiresIn: 3600,
+      expiresIn: "7d",
     });
 
     return res.status(200).json({ token });
@@ -35,20 +35,24 @@ const login = async (req: Request, res: Response) => {
 const auth = async (req: Request, res: Response) => {
   const { token } = req.params;
   try {
-    const decoded = jwt.verify(token, secret_key) as { user_id: string };
+    const decoded = jwt.verify(token, secret_key, { maxAge: "1h" }) as {
+      user_id: string;
+    };
     const user = await service.findOne({ user_id: decoded.user_id });
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // remove password from user object
-    const { password, ...userWithoutPassword } = user; // Create new object without password property
-
-    return res.status(200).json({ userWithoutPassword });
+    const { password, avatar, ...userWithoutPasswordAndAvatar } = user;
+    return res.status(200).json({ ...userWithoutPasswordAndAvatar });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Something went wrong" });
+    if (error instanceof Error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Token expired" });
+      }
+      return res.status(500).json({ error: "Something went wrong" });
+    }
   }
 };
 

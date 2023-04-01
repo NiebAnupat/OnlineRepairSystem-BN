@@ -22,7 +22,8 @@ const getOne = async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = await service.findOne({ user_id: id });
     if (user) {
-      return res.status(200).json(user);
+      const { password, ...userWithoutPassword } = user; // Create new object without password property
+      return res.status(200).json({ ...userWithoutPassword });
     }
     res.status(404).json({ error: "User not found" });
   } catch (error) {
