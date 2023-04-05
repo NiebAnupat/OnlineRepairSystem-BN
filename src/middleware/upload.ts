@@ -10,7 +10,7 @@ const imageFilter = (
 ) => {
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
   const mimetAypeIsValid = allowedMimeTypes.includes(file.mimetype);
-  const extensionIsValid = [".jpg", ".jpeg", ".png", ".gif"].some((ext) =>
+  const extensionIsValid = [".jpg", ".jpeg", ".png", ".JPG"].some((ext) =>
     file.originalname.endsWith(ext)
   );
   if (mimetAypeIsValid && extensionIsValid) {
@@ -22,10 +22,11 @@ const imageFilter = (
 
 const storage = multer.diskStorage({
   destination: (_: Request, file: Express.Multer.File, cb) => {
-    const dir = path.join(__dirname, 'assets', 'uploads');
-    
+    const dir = path.join(process.cwd(),"dist/src/assets/uploads/");
+
     // Create the uploads directory if it does not exist
     if (!fs.existsSync(dir)) {
+      console.log("Creating uploads directory");
       fs.mkdirSync(dir, { recursive: true });
     }
     cb(null, dir);

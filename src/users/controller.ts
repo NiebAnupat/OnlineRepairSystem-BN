@@ -8,12 +8,12 @@ import User from "./UserModel";
 const getAll = async (req: Request, res: Response) => {
   try {
     const users = await service.findAll();
-    res.status(200).json(users);
+    return res.status(200).json(users);
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
     }
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 };
 
@@ -25,7 +25,7 @@ const getOne = async (req: Request, res: Response) => {
       const { password, ...userWithoutPassword } = user; // Create new object without password property
       return res.status(200).json({ ...userWithoutPassword });
     }
-    res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "User not found" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -37,10 +37,13 @@ const getOne = async (req: Request, res: Response) => {
 const create = async (req: Request, res: Response) => {
   try {
     const newUser: User = req.body;
-
+    if (await isValidUser(newUser.user_id)) {
+      return res.status(409).json({ error: "User already exists" });
+    }
     let img: Buffer;
-    const uploadPath = path.join(process.cwd(), "src/assets/uploads/");
     if (req.file !== undefined) {
+      const uploadPath = path.join(process.cwd(), "dist/src/assets/uploads/");
+      console.log(uploadPath);
       img = fs.readFileSync(uploadPath + req.file.filename);
       newUser.avatar = img;
       fs.unlinkSync(uploadPath + req.file.filename); // delete uploaded file
@@ -50,17 +53,16 @@ const create = async (req: Request, res: Response) => {
       );
       newUser.avatar = img;
     }
-
-    const salt = await bcrypt.genSalt(10);
-    newUser.password = await bcrypt.hash(newUser.password, salt);
-
+    newUser.password = await hashPassword(newUser.password);
+    newUser.changeAt = new Date();
     const user = await service.create(newUser);
-    res.status(201).json(user);
+    return res.status(201).json(user);
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
+      console.log(error.message);
+      return res.status(500).json({ error: error.message });
     }
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 };
 
@@ -68,22 +70,43 @@ const update = async (req: Request, res: Response) => {
   const { id } = req.params;
   const updatedUser: User = req.body;
   try {
+    if (!(await isValidUser(id))) {
+      return res.status(404).json({ error: "User not found" });
+    }
     let img: Buffer;
-    // const uploadPath = path.join(process.cwd(), "/assets/uploads/");
-    const uploadPath = path.join(__dirname, "/assets/uploads/");
     if (req.file !== undefined) {
+      const uploadPath = path.join(process.cwd(), "dist/src/assets/uploads/");
       img = fs.readFileSync(uploadPath + req.file.filename);
-      updatedUser.avatar = img;
       fs.unlinkSync(uploadPath + req.file.filename); // delete uploaded file
     } else {
       img = fs.readFileSync(
-        path.join(__dirname, "/assets/", "defaultAvatar.png")
+        path.join(process.cwd(), "/src/assets/", "defaultAvatar.png")
       );
-      updatedUser.avatar = img;
     }
-
+    updatedUser.avatar = img;
+    updatedUser.changeAt = new Date();
+    updatedUser.password = await hashPassword(updatedUser.password);
+    // remove image property from updatedUser
+    delete updatedUser.image;
     const user = await service.update({ user_id: id }, updatedUser);
-    res.status(200).json(user);
+    return res.status(200).json(user);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+const remove = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    if (await isValidUser(id)) {
+      await service.delete({ user_id: id });
+      return res.status(200).json({ message: "User deleted" });
+    }
+    return res.status(404).json({ error: "User not found" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -92,17 +115,14 @@ const update = async (req: Request, res: Response) => {
   }
 };
 
-const remove = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  try {
-    await service.delete({ user_id: id });
-    res.status(204).json();
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    }
-    res.status(500).json({ error: "Something went wrong" });
-  }
+const hashPassword = async (password: string) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
+
+const isValidUser = async (user_id: string) => {
+  const checkUser = await service.findOne({ user_id });
+  return checkUser ? true : false;
 };
 
 export { getAll, getOne, create, update, remove };
