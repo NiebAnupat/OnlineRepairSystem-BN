@@ -5,6 +5,7 @@ import path from "path";
 import service from "./service";
 import User from "./UserModel";
 import getCurrentTime from '../lib/time';
+import { isValidUser, hashPassword } from "./helper";
 
 const getAll = async (req: Request, res: Response) => {
   try {
@@ -117,14 +118,5 @@ const remove = async (req: Request, res: Response) => {
   }
 };
 
-const hashPassword = async (password: string) => {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
-};
-
-const isValidUser = async (user_id: string) => {
-  const checkUser = await service.findOne({ user_id });
-  return checkUser ? true : false;
-};
 
 export { getAll, getOne, create, update, remove };
