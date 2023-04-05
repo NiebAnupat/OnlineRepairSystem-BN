@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import service from "./service";
 import User from "./UserModel";
+import getCurrentTime from '../lib/time';
 
 const getAll = async (req: Request, res: Response) => {
   try {
@@ -54,7 +55,7 @@ const create = async (req: Request, res: Response) => {
       newUser.avatar = img;
     }
     newUser.password = await hashPassword(newUser.password);
-    newUser.changeAt = new Date();
+    newUser.changeAt = getCurrentTime();
     const user = await service.create(newUser);
     return res.status(201).json(user);
   } catch (error) {
@@ -84,7 +85,8 @@ const update = async (req: Request, res: Response) => {
       );
     }
     updatedUser.avatar = img;
-    updatedUser.changeAt = new Date();
+
+    updatedUser.changeAt = getCurrentTime();
     updatedUser.password = await hashPassword(updatedUser.password);
     // remove image property from updatedUser
     delete updatedUser.image;
