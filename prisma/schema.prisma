@@ -9,18 +9,18 @@ datasource db {
 
 model cases {
   case_id                    Int       @id @default(autoincrement())
-  user_id                    String?   @db.VarChar(50)
-  status_id                  Int?
+  user_id                    String    @db.VarChar(50)
+  status_id                  Int
   tec_id                     String?   @db.VarChar(50)
-  name_case                  String    @db.VarChar(50)
+  name_case                  String    @db.VarChar(255)
   detail_case                String    @db.Text
   place_case                 String    @db.VarChar(50)
   date_case                  DateTime  @db.Date
-  date_assign                DateTime  @db.Date
-  date_sent                  DateTime  @db.Date
-  date_close                 DateTime  @db.Date
-  users_cases_user_idTousers users?    @relation("cases_user_idTousers", fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_1")
-  statuses                   statuses? @relation(fields: [status_id], references: [status_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_2")
+  date_assign                DateTime? @db.Date
+  date_sent                  DateTime? @db.Date
+  date_close                 DateTime? @db.Date
+  users_cases_user_idTousers users     @relation("cases_user_idTousers", fields: [user_id], references: [user_id], onUpdate: Restrict, map: "cases_ibfk_1")
+  statuses                   status    @relation(fields: [status_id], references: [status_id], onUpdate: Restrict, map: "cases_ibfk_2")
   users_cases_tec_idTousers  users?    @relation("cases_tec_idTousers", fields: [tec_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "cases_ibfk_3")
   images                     images[]
 
@@ -38,12 +38,6 @@ model images {
   @@index([case_id], map: "case_id")
 }
 
-model statuses {
-  status_id   Int     @id
-  status_name String  @db.VarChar(50)
-  cases       cases[]
-}
-
 model users {
   user_id                    String          @id @db.VarChar(50)
   username                   String          @db.VarChar(50)
@@ -53,6 +47,12 @@ model users {
   changeAt                   DateTime        @default(now()) @db.Timestamp(0)
   cases_cases_user_idTousers cases[]         @relation("cases_user_idTousers")
   cases_cases_tec_idTousers  cases[]         @relation("cases_tec_idTousers")
+}
+
+model status {
+  status_id   Int     @id
+  status_name String  @db.VarChar(50)
+  cases       cases[]
 }
 
 enum users_user_role {

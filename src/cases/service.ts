@@ -13,7 +13,17 @@ export default class CaseService {
   ): Promise<CaseModel | null> {
     const cases: CaseModel | null = await this.prisma.cases.findFirst({
       where,
+      include: {
+        images: true,
+      }
     });
+    return cases;
+  }
+
+  static async findMany(
+    where: Prisma.casesWhereInput
+  ): Promise<CaseModel[] | undefined> {
+    const cases: CaseModel[] = await this.prisma.cases.findMany({ where });
     return cases;
   }
 
