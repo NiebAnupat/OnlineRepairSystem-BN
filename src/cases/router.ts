@@ -4,7 +4,9 @@ import {
   getOne,
   getByQuery,
   create,
-  update,
+  technicalUpdate,
+  userUpdate,
+  adminUpdate,
   remove,
 } from "./controller";
 import upload from "../middleware/upload";
@@ -16,12 +18,13 @@ router.get("/", getAll);
 router.get("/by", getByQuery); // EX. /cases/by?name=xxx
 router.get("/:id", getOne);
 
-
 // POST /cases
 router.post("/", upload.array("images"), create);
 
-// PUT /cases/:id
-router.put("/:id", upload.array("images"), update);
+// PUT /cases/:id/role
+router.put("/:id/tec", technicalUpdate);
+router.put("/:id/user", userUpdate);
+router.put("/:id/admin", adminUpdate);
 
 // DELETE /cases/:id
 router.delete("/:id", remove);

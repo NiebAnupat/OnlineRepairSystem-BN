@@ -8,6 +8,7 @@ import { ImageDUO } from "./ImageModule/imageModel";
 import fs from "fs";
 import path from "path";
 import imageService from "./ImageModule/imageService";
+import UserService from "../users/service";
 
 const getAll = async (req: Request, res: Response) => {
   try {
@@ -26,7 +27,6 @@ const getAll = async (req: Request, res: Response) => {
 
 const getOne = async (req: Request, res: Response) => {
   const { id } = req.params;
-
   try {
     const cases = await service.findOne({ case_id: Number(id) });
     if (!cases) return res.status(404).json({ error: "Case not found" });
@@ -41,6 +41,7 @@ const getOne = async (req: Request, res: Response) => {
 
 const getByQuery = async (req: Request, res: Response) => {
   const user_id = req.query.user as string;
+  const tec_id = req.query.tec as string;
   const name = req.query.name as string;
   const case_id = (req.query.case as string)
     ? Number(req.query.case)
@@ -50,11 +51,13 @@ const getByQuery = async (req: Request, res: Response) => {
     : undefined;
   const place_case = req.query.place as string;
   const date = req.query.date as string;
+  const date_close = req.query.date_close as string;
   try {
     const cases = await service.findMany({
       user_id,
       case_id,
       status_id,
+      tec_id,
       name_case: {
         contains: name,
       },
@@ -64,6 +67,7 @@ const getByQuery = async (req: Request, res: Response) => {
       date_case: {
         gte: date ? new Date(date) : undefined,
       },
+      date_close: date_close ? date_close !== "null" ? new Date(date_close) : null : undefined,
     });
     if (cases?.length === 0)
       return res.status(404).json({ error: "Case not found" });
@@ -110,25 +114,151 @@ const create = async (req: Request, res: Response) => {
   }
 };
 
-const update = async (req: Request, res: Response) => {};
+// const update = async (req: Request, res: Response) => {
+// };
 
-const remove = async (req: Request, res: Response) => {
+const technicalUpdate = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { tec_id, status_id, date_assign, date_sent } = req.body;
+  const st_id = Number(status_id);
   try {
+    const tec = await UserService.findOne({
+      user_id: tec_id,
+      user_role: "worker",
+    });
+    if (!tec) return res.status(404).json({ error: "Technical not found" });
+
+    if (
+      st_id != Status.IN_PROGRESS &&
+      st_id != Status.REPAIRING &&
+      st_id != Status.DONE
+    )
+      return res.status(400).json({ error: "Invalid status" });
+
     const cases = await service.findOne({ case_id: Number(id) });
     if (!cases) return res.status(404).json({ error: "Case not found" });
 
-    await imageService.deleteMany({ case_id: Number(id) });
-    await service.delete({ case_id: Number(id) });
-    return res.status(200).json({ message: "Case deleted" });
+    // check case is have technical
+    if (cases.tec_id !== null) {
+      if (cases.tec_id != tec_id)
+        return res.status(405).json({ error: "Technical not have permission" });
+      const updatedCase = await service.update(
+        { case_id: Number(id) },
+        {
+          ...(status_id && { status_id: st_id }),
+          ...(date_assign && {
+            date_assign: new Date(date_assign),
+          }),
+          ...(date_sent && { date_sent: new Date(date_sent) }),
+        }
+      );
+      return res.status(200).json(updatedCase);
+    } else {
+      const updatedCase = await service.update(
+        { case_id: Number(id) },
+        {
+          ...(tec_id && { tec_id: tec_id }),
+          ...(status_id && { status_id: st_id }),
+          ...(date_assign && {
+            date_assign: new Date(date_assign),
+          }),
+          ...(date_sent && { date_sent: new Date(date_sent) }),
+        }
+      );
+      return res.status(200).json(updatedCase);
+    }
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
-
       return res.status(500).json({ error: error.message });
     }
     return res.status(500).json({ error: "Something went wrong" });
   }
 };
 
-export { getAll, getOne, getByQuery, create, update, remove };
+const userUpdate = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { date_close } = req.body;
+  try {
+    const cases = await service.findOne({ case_id: Number(id) });
+    if (!cases) return res.status(404).json({ error: "Case not found" });
+    const updatedCase = await service.update(
+      { case_id: Number(id) },
+      {
+        ...(date_close && { date_close: new Date(date_close) }),
+      }
+    );
+    return res.status(200).json(updatedCase);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+const adminUpdate = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    tec_id,
+    name_case,
+    detail_case,
+    place_case,
+    status_id,
+    date_assign,
+    date_sent,
+    date_close,
+  } = req.body;
+  try {
+    const cases = await service.findOne({ case_id: Number(id) });
+    if (!cases) return res.status(404).json({ error: "Case not found" });
+    const updatedCase = await service.update(
+      { case_id: Number(id) },
+      {
+        ...(tec_id && { tec_id: tec_id }),
+        ...(name_case && { name_case: name_case }),
+        ...(detail_case && { detail_case: detail_case }),
+        ...(place_case && { place_case: place_case }),
+        ...(status_id && { status_id: Number(status_id) }),
+        ...(date_assign && {
+          date_assign: new Date(date_assign),
+        }),
+        ...(date_sent && { date_sent: new Date(date_sent) }),
+        ...(date_close && { date_close: new Date(date_close) }),
+      }
+    );
+    return res.status(200).json(updatedCase);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+const remove = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const cases = await service.findOne({ case_id: Number(id) });
+    if (!cases) return res.status(404).json({ error: "Case not found" });
+    await imageService.deleteMany({ case_id: Number(id) });
+    await service.delete({ case_id: Number(id) });
+    return res.status(200).json({ message: "Case deleted" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+export {
+  getAll,
+  getOne,
+  getByQuery,
+  create,
+  technicalUpdate,
+  userUpdate,
+  adminUpdate,
+  remove,
+};

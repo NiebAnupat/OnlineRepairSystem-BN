@@ -1,5 +1,4 @@
 import { Status } from "./Status";
-import { images } from ".prisma/client";
 import { ImageDUO } from "./ImageModule/imageModel";
 
 export default interface Case {

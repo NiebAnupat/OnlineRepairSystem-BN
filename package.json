@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npx tsc && npm run copy:assets",
     "start": "node dist/index.js",
-    "dev": "npm run copy:assets && concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
+    "dev": "cls && npm run copy:assets && concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
     "copy:assets": "copyfiles src/assets/* dist/src/assets",
     "format": "prettier --write \"src/**/*.ts\""
   },
