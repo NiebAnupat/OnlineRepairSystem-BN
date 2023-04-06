@@ -93,7 +93,9 @@ const create = async (req: Request, res: Response) => {
         image: fs.readFileSync(path.join(uploadPath, file.filename)),
       };
       images.push(image);
+      fs.unlinkSync(path.join(uploadPath, file.filename));
     }
+
     newCase.status_id = Status.PENDING;
     newCase.date_case = getCurrentTime();
     newCase.images = images;
@@ -118,7 +120,7 @@ const remove = async (req: Request, res: Response) => {
 
     await imageService.deleteMany({ case_id: Number(id) });
     await service.delete({ case_id: Number(id) });
-    return res.status(200).json(cases);
+    return res.status(200).json({ message: "Case deleted" });
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);

@@ -13,7 +13,7 @@ const router = Express.Router();
 
 // GET /cases
 router.get("/", getAll);
-router.get("/by", getByQuery); // /cases/by?name=xxx
+router.get("/by", getByQuery); // EX. /cases/by?name=xxx
 router.get("/:id", getOne);
 
 
