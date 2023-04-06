@@ -36,4 +36,22 @@ export default class CaseService {
     const images: ImageModel = await this.prisma.images.update({ where, data });
     return images;
   }
+
+  static async delete(
+    where: Prisma.imagesWhereUniqueInput
+  ): Promise<ImageModel> {
+    const images: ImageModel = await this.prisma.images.delete({
+      where,
+    });
+    return images;
+  }
+
+  static async deleteMany(
+    where: Prisma.imagesWhereInput
+  ): Promise<Prisma.BatchPayload> {
+    const images: Prisma.BatchPayload = await this.prisma.images.deleteMany({
+      where,
+    });
+    return images;
+  }
 }

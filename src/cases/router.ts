@@ -2,7 +2,7 @@ import Express from "express";
 import {
   getAll,
   getOne,
-  getByName,
+  getByQuery,
   create,
   update,
   remove,
@@ -13,8 +13,9 @@ const router = Express.Router();
 
 // GET /cases
 router.get("/", getAll);
+router.get("/by", getByQuery); // /cases/by?name=xxx
 router.get("/:id", getOne);
-router.get("/?name", getByName);
+
 
 // POST /cases
 router.post("/", upload.array("images"), create);

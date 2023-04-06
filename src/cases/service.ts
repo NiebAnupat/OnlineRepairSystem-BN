@@ -15,7 +15,7 @@ export default class CaseService {
       where,
       include: {
         images: true,
-      }
+      },
     });
     return cases;
   }
@@ -37,6 +37,13 @@ export default class CaseService {
     data: Prisma.casesUpdateInput
   ): Promise<CaseModel> {
     const cases: CaseModel = await this.prisma.cases.update({ where, data });
+    return cases;
+  }
+
+  static async delete(where: Prisma.casesWhereUniqueInput): Promise<CaseModel> {
+    const cases: CaseModel = await this.prisma.cases.delete({
+      where,
+    });
     return cases;
   }
 }
