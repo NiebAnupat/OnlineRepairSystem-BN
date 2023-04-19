@@ -114,9 +114,6 @@ const create = async (req: Request, res: Response) => {
   }
 };
 
-// const update = async (req: Request, res: Response) => {
-// };
-
 const technicalUpdate = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { tec_id, status_id, date_assign, date_sent } = req.body;

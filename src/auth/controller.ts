@@ -35,7 +35,7 @@ const login = async (req: Request, res: Response) => {
 const auth = async (req: Request, res: Response) => {
   const { token } = req.params;
   try {
-    const decoded = jwt.verify(token, secret_key, { maxAge: "1h" }) as {
+    const decoded = jwt.verify(token, secret_key, { maxAge: "7d" }) as {
       user_id: string;
     };
     const user = await service.findOne({ user_id: decoded.user_id });

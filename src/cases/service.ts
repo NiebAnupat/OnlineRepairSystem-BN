@@ -1,49 +1,55 @@
-import { Prisma, PrismaClient, cases as CaseModel } from "@prisma/client";
+import {cases as CaseModel, Prisma, PrismaClient} from "@prisma/client";
 
 export default class CaseService {
   private static prisma = new PrismaClient();
 
   static async findAll(): Promise<CaseModel[] | undefined> {
-    const cases: CaseModel[] = await this.prisma.cases.findMany();
-    return cases;
+    return await this.prisma.cases.findMany({
+      include: {
+        statuses: true,
+        images: true,
+      },
+    });
   }
 
   static async findOne(
     where: Prisma.casesWhereUniqueInput
   ): Promise<CaseModel | null> {
-    const cases: CaseModel | null = await this.prisma.cases.findFirst({
+    return await this.prisma.cases.findFirst({
       where,
       include: {
+        statuses: true,
         images: true,
       },
     });
-    return cases;
   }
 
   static async findMany(
     where: Prisma.casesWhereInput
   ): Promise<CaseModel[] | undefined> {
-    const cases: CaseModel[] = await this.prisma.cases.findMany({ where });
-    return cases;
+    return await this.prisma.cases.findMany({
+      where,
+      include: {
+        statuses: true,
+        images: true,
+      },
+    });
   }
 
   static async create(data: Prisma.casesCreateInput): Promise<CaseModel> {
-    const cases: CaseModel = await this.prisma.cases.create({ data });
-    return cases;
+    return await this.prisma.cases.create({data});
   }
 
   static async update(
     where: Prisma.casesWhereUniqueInput,
     data: Prisma.casesUpdateInput
   ): Promise<CaseModel> {
-    const cases: CaseModel = await this.prisma.cases.update({ where, data });
-    return cases;
+    return await this.prisma.cases.update({where, data});
   }
 
   static async delete(where: Prisma.casesWhereUniqueInput): Promise<CaseModel> {
-    const cases: CaseModel = await this.prisma.cases.delete({
+    return await this.prisma.cases.delete({
       where,
     });
-    return cases;
   }
 }
