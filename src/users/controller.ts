@@ -3,8 +3,8 @@ import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 import service from "./service";
-import User from "./UserModel";
-import getCurrentTime from '../lib/time';
+import User, { UserUDO } from "./UserModel";
+import getCurrentTime from "../lib/time";
 import { isValidUser, hashPassword } from "./helper";
 
 const getAll = async (req: Request, res: Response) => {
@@ -68,9 +68,10 @@ const create = async (req: Request, res: Response) => {
   }
 };
 
+// TODO : make update user do not send user infomation
 const update = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const updatedUser: User = req.body;
+  const updatedUser: UserUDO = req.body;
   try {
     if (!(await isValidUser(id))) {
       return res.status(404).json({ error: "User not found" });
@@ -80,19 +81,22 @@ const update = async (req: Request, res: Response) => {
       const uploadPath = path.join(process.cwd(), "dist/src/assets/uploads/");
       img = fs.readFileSync(uploadPath + req.file.filename);
       fs.unlinkSync(uploadPath + req.file.filename); // delete uploaded file
-    } else {
-      img = fs.readFileSync(
-        path.join(process.cwd(), "/src/assets/", "defaultAvatar.png")
-      );
+      updatedUser.avatar = img;
     }
-    updatedUser.avatar = img;
+
+    if (updatedUser.password)
+      updatedUser.password = await hashPassword(updatedUser.password);
 
     updatedUser.changeAt = getCurrentTime();
-    updatedUser.password = await hashPassword(updatedUser.password);
-    // remove image property from updatedUser
-    delete updatedUser.image;
     const user = await service.update({ user_id: id }, updatedUser);
-    return res.status(200).json(user);
+    // FIX : changeAt is not updated
+    return res
+      .status(200)
+      .json({
+        msg: `User ID : ${user.user_id} updated at ${new Date(
+          user.changeAt
+        ).toLocaleString("th-TH")}`,
+      });
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
@@ -117,6 +121,5 @@ const remove = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Something went wrong" });
   }
 };
-
 
 export { getAll, getOne, create, update, remove };

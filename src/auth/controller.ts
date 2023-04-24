@@ -7,7 +7,7 @@ const secret_key = process.env.SECRET_KEY || "MySecretKey";
 
 const login = async (req: Request, res: Response) => {
   const { user_id, password } = req.body;
-
+  
   try {
     const user = await service.findOne({ user_id });
 
