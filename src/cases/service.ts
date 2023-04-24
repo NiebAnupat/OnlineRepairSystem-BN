@@ -49,7 +49,8 @@ export default class CaseService {
   }
 
   static async findMany(
-    where: Prisma.casesWhereInput
+    where: Prisma.casesWhereInput,
+    getImage : boolean = false
   ): Promise<CaseModel[] | undefined> {
     return await this.prisma.cases.findMany({
       where,
@@ -67,7 +68,7 @@ export default class CaseService {
             username: true,
           },
         },
-        images: true,
+        images: getImage,
       },
     });
   }

@@ -52,6 +52,7 @@ const getByQuery = async (req: Request, res: Response) => {
   const place_case = req.query.place as string;
   const date = req.query.date as string;
   const date_close = req.query.date_close as string;
+  const getImages = req.query.getImages as string;
   try {
     const cases = await service.findMany({
       user_id,
@@ -68,7 +69,7 @@ const getByQuery = async (req: Request, res: Response) => {
         gte: date ? new Date(date) : undefined,
       },
       date_close: date_close ? date_close !== "null" ? new Date(date_close) : null : undefined,
-    });
+    }, getImages === "true" ? true : false);
     if (cases?.length === 0)
       return res.status(404).json({ error: "Case not found" });
     return res.status(200).json(cases);
