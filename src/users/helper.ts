@@ -6,9 +6,14 @@ const hashPassword = async (password: string) => {
   return await bcrypt.hash(password, salt);
 };
 
+const decodePassword = async (password: string, hash: string) => { 
+  return await bcrypt.compare(password, hash);
+ }
+
 const isValidUser = async (user_id: string) => {
   const checkUser = await service.findOne({ user_id });
+  
   return checkUser ? true : false;
 };
 
-export { hashPassword, isValidUser };
+export { hashPassword,decodePassword, isValidUser };

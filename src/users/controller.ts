@@ -5,11 +5,16 @@ import path from "path";
 import service from "./service";
 import User, { UserUDO } from "./UserModel";
 import getCurrentTime from "../lib/time";
-import { isValidUser, hashPassword } from "./helper";
+import { isValidUser, hashPassword, decodePassword } from "./helper";
 
 const getAll = async (req: Request, res: Response) => {
   try {
-    const users = await service.findAll();
+    const getImages = req.query.getImages as string;
+    const users = await service.findAll(getImages === "true" ? true : false);
+    users?.map((user) => {
+      const { password, ...userWithoutPassword } = user; // Create new object without password property
+      return userWithoutPassword;
+    });
     return res.status(200).json(users);
   } catch (error) {
     if (error instanceof Error) {
@@ -39,6 +44,7 @@ const getOne = async (req: Request, res: Response) => {
 const create = async (req: Request, res: Response) => {
   try {
     const newUser: User = req.body;
+
     if (await isValidUser(newUser.user_id)) {
       return res.status(409).json({ error: "User already exists" });
     }
@@ -68,7 +74,6 @@ const create = async (req: Request, res: Response) => {
   }
 };
 
-// TODO : make update user do not send user infomation
 const update = async (req: Request, res: Response) => {
   const { id } = req.params;
   const updatedUser: UserUDO = req.body;
@@ -90,13 +95,11 @@ const update = async (req: Request, res: Response) => {
     updatedUser.changeAt = getCurrentTime();
     const user = await service.update({ user_id: id }, updatedUser);
     // FIX : changeAt is not updated
-    return res
-      .status(200)
-      .json({
-        msg: `User ID : ${user.user_id} updated at ${new Date(
-          user.changeAt
-        ).toLocaleString("th-TH")}`,
-      });
+    return res.status(200).json({
+      msg: `User ID : ${user.user_id} updated at ${new Date(
+        user.changeAt
+      ).toLocaleString("th-TH")}`,
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
