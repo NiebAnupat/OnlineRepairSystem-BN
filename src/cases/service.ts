@@ -25,7 +25,8 @@ export default class CaseService {
   }
 
   static async findOne(
-    where: Prisma.casesWhereUniqueInput
+    where: Prisma.casesWhereUniqueInput,
+    getImage : boolean = true
   ): Promise<CaseModel | null> {
     return await this.prisma.cases.findFirst({
       where,
@@ -43,7 +44,7 @@ export default class CaseService {
             username: true,
           },
         },
-        images: true,
+        images: getImage,
       },
     });
   }

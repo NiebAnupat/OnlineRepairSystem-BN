@@ -27,8 +27,12 @@ const getAll = async (req: Request, res: Response) => {
 
 const getOne = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const getImages = req.query.getImages as string;
   try {
-    const cases = await service.findOne({ case_id: Number(id) });
+    const cases = await service.findOne(
+      { case_id: Number(id) },
+      getImages === "true" ? true : false
+    );
     if (!cases) return res.status(404).json({ error: "Case not found" });
     return res.status(200).json(cases);
   } catch (error) {
@@ -54,22 +58,29 @@ const getByQuery = async (req: Request, res: Response) => {
   const date_close = req.query.date_close as string;
   const getImages = req.query.getImages as string;
   try {
-    const cases = await service.findMany({
-      user_id,
-      case_id,
-      status_id,
-      tec_id,
-      name_case: {
-        contains: name,
+    const cases = await service.findMany(
+      {
+        user_id,
+        case_id,
+        status_id,
+        tec_id,
+        name_case: {
+          contains: name,
+        },
+        place_case: {
+          contains: place_case,
+        },
+        date_case: {
+          gte: date ? new Date(date) : undefined,
+        },
+        date_close: date_close
+          ? date_close !== "null"
+            ? new Date(date_close)
+            : null
+          : undefined,
       },
-      place_case: {
-        contains: place_case,
-      },
-      date_case: {
-        gte: date ? new Date(date) : undefined,
-      },
-      date_close: date_close ? date_close !== "null" ? new Date(date_close) : null : undefined,
-    }, getImages === "true" ? true : false);
+      getImages === "true" ? true : false
+    );
     if (cases?.length === 0)
       return res.status(404).json({ error: "Case not found" });
     return res.status(200).json(cases);
@@ -117,7 +128,7 @@ const create = async (req: Request, res: Response) => {
 
 const technicalUpdate = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { tec_id, status_id, date_assign, date_sent } = req.body;
+  const { tec_id, status_id, date_assign, date_sent, date_close } = req.body;
   const st_id = Number(status_id);
   try {
     const tec = await UserService.findOne({
@@ -148,6 +159,7 @@ const technicalUpdate = async (req: Request, res: Response) => {
             date_assign: new Date(date_assign),
           }),
           ...(date_sent && { date_sent: new Date(date_sent) }),
+          ...(date_close && { date_close: new Date(date_close) }),
         }
       );
       return res.status(200).json(updatedCase);
